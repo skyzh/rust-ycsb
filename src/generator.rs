@@ -1,10 +1,12 @@
 mod acknowledged_counter_generator;
+mod constant_generator;
 mod counter_generator;
 mod discrete_generator;
 mod uniform_long_generator;
 mod zipfian_generator;
 
 pub use acknowledged_counter_generator::AcknowledgedCounterGenerator;
+pub use constant_generator::ConstantGenerator;
 pub use counter_generator::CounterGenerator;
 pub use discrete_generator::DiscreteGenerator;
 pub use uniform_long_generator::UniformLongGenerator;
@@ -17,6 +19,7 @@ use std::string::ToString;
 pub enum Generators {
     UniformLong(UniformLongGenerator),
     Zipfian(ZipfianGenerator),
+    Constant(ConstantGenerator<u64>),
 }
 
 #[enum_dispatch]

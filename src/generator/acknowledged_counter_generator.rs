@@ -1,63 +1,88 @@
 use super::{CounterGenerator, Generator, NumberGenerator};
 use rand::prelude::*;
-use std::sync::Mutex;
+use std::sync::{
+    atomic::{AtomicBool, AtomicU64, Ordering},
+    Mutex,
+};
 
 const WINDOW_SIZE: u64 = 1 << 20;
 const WINDOW_MASK: u64 = WINDOW_SIZE - 1;
 
-struct Core {
-    window: Vec<bool>,
-    limit: u64,
-}
 pub struct AcknowledgedCounterGenerator {
     counter: CounterGenerator,
-    core: Mutex<Core>,
+    window: Vec<AtomicBool>,
+    limit: AtomicU64,
+    core: Mutex<()>,
 }
 
 impl AcknowledgedCounterGenerator {
     pub fn new(count_start: u64) -> Self {
         let counter = CounterGenerator::new(count_start);
         let mut window = Vec::with_capacity(WINDOW_SIZE as usize);
-        window.resize(WINDOW_SIZE as usize, false);
-        let core = Core {
-            window,
-            limit: count_start - 1,
-        };
+        for i in 0..WINDOW_SIZE {
+            window.push(AtomicBool::new(false));
+        }
         Self {
             counter,
-            core: Mutex::new(core),
+            window,
+            limit: AtomicU64::new(count_start - 1),
+            core: Mutex::new(()),
         }
     }
 
     pub fn acknowledge(&self, value: u64) {
         let current_slot = value & WINDOW_MASK;
-        if let Ok(mut core) = self.core.try_lock() {
-            let before_first_slot = core.limit & WINDOW_MASK;
-            let mut index = core.limit + 1;
+        let slot = &self.window[current_slot as usize];
+        if slot.swap(true, Ordering::SeqCst) {
+            panic!("too many unacknowledged requests");
+        }
+        if let Ok(_) = self.core.try_lock() {
+            let limit = self.limit.load(Ordering::SeqCst);
+            let before_first_slot = limit & WINDOW_MASK;
+            let mut index = limit + 1;
             let new_index = loop {
                 if index != before_first_slot {
                     let slot = (index & WINDOW_MASK) as usize;
-                    if !core.window[slot] {
+                    if !self.window[slot].load(Ordering::SeqCst) {
                         break index;
                     }
-                    core.window[slot] = false;
+                    self.window[slot].store(false, Ordering::SeqCst);
                 } else {
                     break index;
                 }
                 index += 1;
             };
-            core.limit = new_index - 1;
+            self.limit.store(new_index - 1, Ordering::SeqCst);
         }
     }
 
     pub fn last_value(&self) -> u64 {
-        let core = self.core.lock().unwrap();
-        core.limit
+        self.limit.load(Ordering::SeqCst)
     }
 }
 
 impl Generator<u64> for AcknowledgedCounterGenerator {
     fn next_value(&self) -> u64 {
         self.counter.next_value()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_counter() {
+        let generator = AcknowledgedCounterGenerator::new(1);
+        assert_eq!(generator.next_value(), 1);
+        assert_eq!(generator.last_value(), 0);
+        assert_eq!(generator.next_value(), 2);
+        assert_eq!(generator.last_value(), 0);
+        generator.acknowledge(1);
+        assert_eq!(generator.last_value(), 1);
+        generator.acknowledge(2);
+        assert_eq!(generator.last_value(), 2);
+        generator.acknowledge(1);
+        assert_eq!(generator.last_value(), 2);
     }
 }

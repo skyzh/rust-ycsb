@@ -22,4 +22,10 @@ pub struct CoreWorkload {
     key_chooser: Generators,
     field_chooser: Generators,
     transaction_insert_key_sequence: AcknowledgedCounterGenerator,
+    scan_length: Generators,
+    ordered_inserts: bool,
+    record_count: usize,
+    zero_padding: usize,
+    insertion_retry_limit: u64,
+    insertion_retry_interval: u64,
 }

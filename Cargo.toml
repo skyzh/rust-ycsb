@@ -11,3 +11,4 @@ rand = { version = "0.8", features = ["small_rng"] }
 log = "0.4"
 env_logger = "0.8"
 enum_dispatch = "0.3"
+serde = { version = "1.0", features = ["derive"] }
