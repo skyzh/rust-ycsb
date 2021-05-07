@@ -16,8 +16,8 @@ impl UniformLongGenerator {
 }
 
 impl Generator<u64> for UniformLongGenerator {
-    fn next_value(&self) -> u64 {
-        thread_rng().gen_range(self.lower_bound..=self.upper_bound)
+    fn next_value(&self, rng: &mut SmallRng) -> u64 {
+        rng.gen_range(self.lower_bound..=self.upper_bound)
     }
 }
 

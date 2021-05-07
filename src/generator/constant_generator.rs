@@ -1,3 +1,5 @@
+use rand::prelude::SmallRng;
+
 use super::Generator;
 
 pub struct ConstantGenerator<T: ToString + Clone> {
@@ -11,7 +13,7 @@ impl<T: ToString + Clone> ConstantGenerator<T> {
 }
 
 impl<T: ToString + Clone> Generator<T> for ConstantGenerator<T> {
-    fn next_value(&self) -> T {
+    fn next_value(&self, _rng: &mut SmallRng) -> T {
         self.value.clone()
     }
 }

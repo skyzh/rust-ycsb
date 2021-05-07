@@ -1,4 +1,4 @@
 mod db;
-mod generator;
+pub mod generator;
 mod properties;
-mod workload;
+pub mod workload;

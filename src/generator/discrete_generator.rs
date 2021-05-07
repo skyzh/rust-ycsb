@@ -31,8 +31,8 @@ impl<T: ToString + Clone> DiscreteGenerator<T> {
 }
 
 impl<T: ToString + Clone> Generator<T> for DiscreteGenerator<T> {
-    fn next_value(&self) -> T {
-        let mut val = thread_rng().gen::<f64>();
+    fn next_value(&self, rng: &mut SmallRng) -> T {
+        let mut val = rng.gen::<f64>();
         for Pair { weight, value } in &self.values {
             let pw = *weight / self.sum;
             if val < pw {
@@ -53,8 +53,9 @@ mod tests {
         let pairs = vec![Pair::new(0.3, "test"), Pair::new(0.7, "b")];
         let generator = DiscreteGenerator::<String>::new(pairs);
         let mut result = std::collections::HashMap::new();
+        let mut rng = SmallRng::from_entropy();
         for _i in 0..10000 {
-            let val = generator.next_value();
+            let val = generator.next_value(&mut rng);
             result.entry(val).and_modify(|x| *x += 1).or_insert(1);
         }
         println!("{:?}", result);

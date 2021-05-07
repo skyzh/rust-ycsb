@@ -9,6 +9,8 @@ pub use acknowledged_counter_generator::AcknowledgedCounterGenerator;
 pub use constant_generator::ConstantGenerator;
 pub use counter_generator::CounterGenerator;
 pub use discrete_generator::DiscreteGenerator;
+use rand::prelude::SmallRng;
+use rand::Rng;
 pub use uniform_long_generator::UniformLongGenerator;
 pub use zipfian_generator::ZipfianGenerator;
 
@@ -24,7 +26,7 @@ pub enum Generators {
 
 #[enum_dispatch]
 pub trait Generator<T: ToString + Clone> {
-    fn next_value(&self) -> T;
+    fn next_value(&self, rng: &mut SmallRng) -> T;
 }
 
 pub trait NumberGenerator<T: ToString + Clone>: Generator<T> {
@@ -48,8 +50,8 @@ where
         }
     }
 
-    pub fn next_value(&mut self) -> T {
-        let v = self.generator.next_value();
+    pub fn next_value(&mut self, rng: &mut SmallRng) -> T {
+        let v = self.generator.next_value(rng);
         self.last_value = Some(v.clone());
         v
     }
@@ -58,8 +60,8 @@ where
         self.last_value.clone().unwrap()
     }
 
-    pub fn next_string(&mut self) -> String {
-        self.next_value().to_string()
+    pub fn next_string(&mut self, rng: &mut SmallRng) -> String {
+        self.next_value(rng).to_string()
     }
 
     pub fn last_string(&self) -> String {

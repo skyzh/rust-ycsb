@@ -19,7 +19,7 @@ impl AcknowledgedCounterGenerator {
     pub fn new(count_start: u64) -> Self {
         let counter = CounterGenerator::new(count_start);
         let mut window = Vec::with_capacity(WINDOW_SIZE as usize);
-        for i in 0..WINDOW_SIZE {
+        for _i in 0..WINDOW_SIZE {
             window.push(AtomicBool::new(false));
         }
         Self {
@@ -36,7 +36,7 @@ impl AcknowledgedCounterGenerator {
         if slot.swap(true, Ordering::SeqCst) {
             panic!("too many unacknowledged requests");
         }
-        if let Ok(_) = self.core.try_lock() {
+        if self.core.try_lock().is_ok() {
             let limit = self.limit.load(Ordering::SeqCst);
             let before_first_slot = limit & WINDOW_MASK;
             let mut index = limit + 1;
@@ -62,8 +62,8 @@ impl AcknowledgedCounterGenerator {
 }
 
 impl Generator<u64> for AcknowledgedCounterGenerator {
-    fn next_value(&self) -> u64 {
-        self.counter.next_value()
+    fn next_value(&self, rng: &mut SmallRng) -> u64 {
+        self.counter.next_value(rng)
     }
 }
 
@@ -74,9 +74,10 @@ mod tests {
     #[test]
     fn test_counter() {
         let generator = AcknowledgedCounterGenerator::new(1);
-        assert_eq!(generator.next_value(), 1);
+        let mut rng = SmallRng::from_entropy();
+        assert_eq!(generator.next_value(&mut rng), 1);
         assert_eq!(generator.last_value(), 0);
-        assert_eq!(generator.next_value(), 2);
+        assert_eq!(generator.next_value(&mut rng), 2);
         assert_eq!(generator.last_value(), 0);
         generator.acknowledge(1);
         assert_eq!(generator.last_value(), 1);

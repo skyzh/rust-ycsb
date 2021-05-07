@@ -13,7 +13,6 @@ struct ZipfianParameters {
 }
 
 pub struct ZipfianGenerator {
-    rng: SmallRng,
     items: u64,
     base: u64,
     zipfian_constant: f64,
@@ -69,12 +68,11 @@ impl ZipfianGenerator {
             zipfian_constant,
             zipfian_parameters,
             count_for_zeta: items,
-            rng: SmallRng::from_entropy(),
             allow_item_count_decrease: false,
         }
     }
 
-    fn next_long(&self, item_count: u64) -> u64 {
+    fn next_long(&self, item_count: u64, rng: &mut SmallRng) -> u64 {
         if item_count != self.count_for_zeta {
             /*
             if item_count > self.count_for_zeta {
@@ -99,14 +97,14 @@ impl ZipfianGenerator {
             todo!("change item count after creating zipfian is not yet supported");
         }
 
-        let u = thread_rng().gen::<f64>();
+        let u = rng.gen::<f64>();
         let uz = u * self.zipfian_parameters.zetan;
 
         if uz < 1.0 {
             return self.base;
         }
 
-        if uz < 1.0 + (0.5 as f64).powf(self.zipfian_parameters.theta) {
+        if uz < 1.0 + (0.5_f64).powf(self.zipfian_parameters.theta) {
             return self.base + 1;
         }
 
@@ -118,8 +116,8 @@ impl ZipfianGenerator {
 }
 
 impl Generator<u64> for ZipfianGenerator {
-    fn next_value(&self) -> u64 {
-        self.next_long(self.items)
+    fn next_value(&self, rng: &mut SmallRng) -> u64 {
+        self.next_long(self.items, rng)
     }
 }
 
@@ -139,8 +137,9 @@ mod tests {
         let max = 10;
         let zipfian = ZipfianGenerator::from_range(min, max);
         let mut result = std::collections::HashMap::new();
+        let mut rng = SmallRng::from_entropy();
         for _i in 0..100000 {
-            let val = zipfian.next_value();
+            let val = zipfian.next_value(&mut rng);
             assert!(val >= min);
             assert!(val <= max);
             result.entry(val).and_modify(|x| *x += 1).or_insert(1);
