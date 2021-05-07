@@ -1,12 +1,12 @@
 use super::Generator;
 use rand::prelude::*;
 
-pub struct Pair<T: Clone> {
+pub struct WeightPair<T: Clone> {
     weight: f64,
     value: T,
 }
 
-impl<T: Clone> Pair<T> {
+impl<T: Clone> WeightPair<T> {
     pub fn new(weight: f64, value: impl Into<T>) -> Self {
         Self {
             weight,
@@ -16,14 +16,14 @@ impl<T: Clone> Pair<T> {
 }
 
 pub struct DiscreteGenerator<T: Clone> {
-    values: Vec<Pair<T>>,
+    values: Vec<WeightPair<T>>,
     sum: f64,
 }
 
 impl<T: ToString + Clone> DiscreteGenerator<T> {
-    pub fn new(values: Vec<Pair<T>>) -> Self {
+    pub fn new(values: Vec<WeightPair<T>>) -> Self {
         let mut sum = 0.0;
-        for Pair { weight, .. } in &values {
+        for WeightPair { weight, .. } in &values {
             sum += *weight;
         }
         Self { values, sum }
@@ -33,7 +33,7 @@ impl<T: ToString + Clone> DiscreteGenerator<T> {
 impl<T: ToString + Clone> Generator<T> for DiscreteGenerator<T> {
     fn next_value(&self, rng: &mut SmallRng) -> T {
         let mut val = rng.gen::<f64>();
-        for Pair { weight, value } in &self.values {
+        for WeightPair { weight, value } in &self.values {
             let pw = *weight / self.sum;
             if val < pw {
                 return value.clone();
@@ -50,8 +50,8 @@ mod tests {
 
     #[test]
     fn test_discrete_generator() {
-        let pairs = vec![Pair::new(0.3, "test"), Pair::new(0.7, "b")];
-        let generator = DiscreteGenerator::<String>::new(pairs);
+        let WeightPairs = vec![WeightPair::new(0.3, "test"), WeightPair::new(0.7, "b")];
+        let generator = DiscreteGenerator::<String>::new(WeightPairs);
         let mut result = std::collections::HashMap::new();
         let mut rng = SmallRng::from_entropy();
         for _i in 0..10000 {

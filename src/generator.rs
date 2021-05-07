@@ -8,23 +8,13 @@ mod zipfian_generator;
 pub use acknowledged_counter_generator::AcknowledgedCounterGenerator;
 pub use constant_generator::ConstantGenerator;
 pub use counter_generator::CounterGenerator;
-pub use discrete_generator::DiscreteGenerator;
+pub use discrete_generator::{DiscreteGenerator, WeightPair};
 use rand::prelude::SmallRng;
-use rand::Rng;
 pub use uniform_long_generator::UniformLongGenerator;
 pub use zipfian_generator::ZipfianGenerator;
 
-use enum_dispatch::enum_dispatch;
 use std::string::ToString;
 
-#[enum_dispatch(Generator)]
-pub enum Generators {
-    UniformLong(UniformLongGenerator),
-    Zipfian(ZipfianGenerator),
-    Constant(ConstantGenerator<u64>),
-}
-
-#[enum_dispatch]
 pub trait Generator<T: ToString + Clone> {
     fn next_value(&self, rng: &mut SmallRng) -> T;
 }
