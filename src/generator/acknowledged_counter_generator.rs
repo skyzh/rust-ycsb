@@ -36,7 +36,7 @@ impl AcknowledgedCounterGenerator {
         if slot.swap(true, Ordering::SeqCst) {
             panic!("too many unacknowledged requests");
         }
-        if self.core.try_lock().is_ok() {
+        if let Ok(_lock) = self.core.try_lock() {
             let limit = self.limit.load(Ordering::SeqCst);
             let before_first_slot = limit & WINDOW_MASK;
             let mut index = limit + 1;
