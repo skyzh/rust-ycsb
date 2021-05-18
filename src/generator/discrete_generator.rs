@@ -50,8 +50,8 @@ mod tests {
 
     #[test]
     fn test_discrete_generator() {
-        let WeightPairs = vec![WeightPair::new(0.3, "test"), WeightPair::new(0.7, "b")];
-        let generator = DiscreteGenerator::<String>::new(WeightPairs);
+        let weight_pairs = vec![WeightPair::new(0.3, "test"), WeightPair::new(0.7, "b")];
+        let generator = DiscreteGenerator::<String>::new(weight_pairs);
         let mut result = std::collections::HashMap::new();
         let mut rng = SmallRng::from_entropy();
         for _i in 0..10000 {

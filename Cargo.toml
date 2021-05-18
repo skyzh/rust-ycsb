@@ -1,31 +1,44 @@
 [package]
-name = "ycsb"
-version = "0.1.0"
 authors = ["Alex Chi <iskyzh@gmail.com>"]
 edition = "2018"
+name = "ycsb"
+version = "0.1.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[features]
+all = ["sled"]
+default = ["all"]
+sled = ["db_sled"]
+
 [dependencies]
-rand = { version = "0.8", features = ["small_rng"] }
-log = "0.4"
-env_logger = "0.8"
+db_sled = {path = "components/db_sled", optional = true}
 enum_dispatch = "0.3"
-serde = { version = "1.0", features = ["derive"] }
+env_logger = "0.8"
+log = "0.4"
+rand = {version = "0.8", features = ["small_rng"]}
+serde = {version = "1.0", features = ["derive"]}
+ycsb_wrapper = {path = "components/ycsb_wrapper"}
 
 [dev-dependencies]
 criterion = "0.3"
 
 [[bench]]
-name = "generator_bench"
 harness = false
+name = "generator_bench"
 
 [profile.bench]
-opt-level = 3
-debug = false
 codegen-units = 1
-lto = 'thin'
-incremental = false
+debug = false
 debug-assertions = false
+incremental = false
+lto = 'thin'
+opt-level = 3
 overflow-checks = false
 rpath = false
+
+[workspace]
+members = [
+  "components/ycsb_wrapper",
+  "components/db_sled",
+]

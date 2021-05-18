@@ -1,0 +1,10 @@
+[package]
+edition = "2018"
+name = "db_sled"
+version = "0.1.0"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+sled = "0.34"
+ycsb_wrapper = {path = "../ycsb_wrapper"}
